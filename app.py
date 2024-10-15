@@ -1,18 +1,16 @@
 import streamlit as st
 from openai import OpenAI
-import os
-from dotenv import load_dotenv
+
 
 # Display logo
 logo_url = 'logo3.jpg'
 st.image(logo_url, width=200)
 
-load_dotenv()
-api_key = os.getenv("openai_api_key")
+api_key = st.secrets["API_KEY"]
 client = OpenAI(api_key=api_key)
 
 # Assistant ID
-assistant_id = "asst_X0m1o5VijT4CglzNxpe5jwfN"
+assistant_id = st.secrets["ASSISTANT_ID"]
 
 # Reset the session when the button is clicked
 if st.button("Limpiar Respuestas"):
