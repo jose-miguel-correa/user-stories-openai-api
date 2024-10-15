@@ -4,7 +4,7 @@ from openai import OpenAI
 
 # Display logo
 logo_url = 'logo3.jpg'
-st.image(logo_url, width=200)
+st.image(logo_url, width=100)
 
 api_key = st.secrets["API_KEY"]
 client = OpenAI(api_key=api_key)
