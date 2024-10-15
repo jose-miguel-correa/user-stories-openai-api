@@ -34,29 +34,33 @@ class UserStoryAssistant:
             if self.content.strip() == "":
                 st.error("Por favor, escribe el texto que necesitas.")
             else:
-                thread = self.client.beta.threads.create(
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": self.content,
-                        }
-                    ]
-                )
+                try:
+                    thread = self.client.beta.threads.create(
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": self.content,
+                            }
+                        ]
+                    )
 
-                run = self.client.beta.threads.runs.create_and_poll(
-                    thread_id=thread.id, assistant_id=self.assistant_id
-                )
+                    run = self.client.beta.threads.runs.create_and_poll(
+                        thread_id=thread.id, assistant_id=self.assistant_id
+                    )
 
-                messages = list(self.client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
+                    messages = list(self.client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
 
-                if messages:
-                    try:
-                        message_content = messages[0].content[0].text
-                        st.session_state.responses.append(message_content.value)
-                    except IndexError:
-                        st.error("No content found in the first message. Please verify the response structure.")
-                else:
-                    st.error("No messages were retrieved. Please check the query or the assistant's configuration.")
+                    if messages:
+                        try:
+                            message_content = messages[0].content[0].text
+                            st.session_state.responses.append(message_content.value)
+                        except IndexError:
+                            st.error("No content found in the first message. Please verify the response structure.")
+                    else:
+                        st.error("No messages were retrieved. Please check the query or the assistant's configuration.")
+                except Exception as e:
+                    st.error(f"An error occurred: {str(e)}")
+
 
     def display_responses(self):
         if st.session_state.responses:
