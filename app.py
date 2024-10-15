@@ -1,14 +1,11 @@
 import streamlit as st
 from openai import OpenAI
-import os
-from dotenv import load_dotenv
 
 class UserStoryAssistant:
     def __init__(self):
         # Load environment variables
-        load_dotenv()
-        self.api_key = os.getenv("openai_api_key")
-        self.client = OpenAI(api_key=self.api_key)
+        self.api_key = "sk-FQOoZukGLEU4BwuEAmAzszXpaqsWmctYm3X4rU_Nn9T3BlbkFJj6dmrjouSXimtA844vJAAJvgSTEszRNhLGS7ukz0YA"
+        self.client = "OpenAI(api_key=self.api_key)"
         self.assistant_id = "asst_X0m1o5VijT4CglzNxpe5jwfN"
 
         # Initialize session state for responses if not already present
