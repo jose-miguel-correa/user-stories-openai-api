@@ -6,6 +6,7 @@ client = OpenAI(api_key=api_key)
 
 # Assistant ID
 assistant_id = st.secrets["ASSISTANT_ID"]
+
 # Display logo
 logo_url = 'logo3.jpg'
 st.image(logo_url, width=100)
@@ -22,11 +23,11 @@ if "user_input" not in st.session_state:
 # Create a text input for user query
 def submit_user_input():
     st.session_state.user_input = st.session_state.widget  # Store the input in session state
-    st.session_state.widget = ""  # Clear the input field
 
-# Text input widget
+# Text input widget for user input
 st.text_input('Escribe tu solicitud al asistente (Por ejemplo, "Crear perfil AWS EC2" o "Crear botón de login de usuario")',
               key='widget',  # Use a key to track the input
+              value=st.session_state.user_input,  # Retain the current value
               on_change=submit_user_input)  # Call submit function when input changes
 
 # Initialize session state for responses if not already present
@@ -79,7 +80,8 @@ if "suggestion" not in st.session_state:
 
 # Suggestion input widget
 suggestion = st.text_input('Sugerencia de modificación (escribe un cambio que deseas realizar en la respuesta anterior)',
-                            key='suggestion')
+                            key='suggestion',  # Use a key to track the suggestion input
+                            value=st.session_state.suggestion)  # Retain the current value
 
 if st.button("Genera Nueva Historia de Usuario"):
     last_response = st.session_state.responses[-1] if st.session_state.responses else ""
