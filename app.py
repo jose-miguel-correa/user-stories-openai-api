@@ -1,41 +1,41 @@
 import streamlit as st
 from openai import OpenAI
 
-
-# Display logo
-logo_url = 'logo3.jpg'
-st.image(logo_url, width=100)
-
 api_key = st.secrets["API_KEY"]
 client = OpenAI(api_key=api_key)
 
 # Assistant ID
 assistant_id = st.secrets["ASSISTANT_ID"]
-
-# Initialize session state for responses and inputs if not already present
-if "responses" not in st.session_state:
-    st.session_state.responses = []
-if "user_input" not in st.session_state:
-    st.session_state.user_input = ""  # For the main content input
-if "suggestion_input" not in st.session_state:
-    st.session_state.suggestion_input = ""  # For the suggestion input
+# Display logo
+logo_url = 'logo3.jpg'
+st.image(logo_url, width=100)
+st.title("Asistente de Historias de Usuario")
 
 # Reset the session when the button is clicked
 if st.button("Limpiar Respuestas"):
     st.session_state.clear()
 
-st.title("Asistente de Historias de Usuario")
-
 # Step 1: User provides a content query
-content = st.text_input('Escribe tu solicitud al asistente (Por ejemplo, "Crear perfil AWS EC2" o "Crear botón de login de usuario")')
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""  # Initialize user input in session state
+
+# Create a text input for user query
+def submit_user_input():
+    st.session_state.user_input = st.session_state.widget  # Store the input in session state
+    st.session_state.widget = ""  # Clear the input field
+
+# Text input widget
+st.text_input('Escribe tu solicitud al asistente (Por ejemplo, "Crear perfil AWS EC2" o "Crear botón de login de usuario")',
+              key='widget',  # Use a key to track the input
+              on_change=submit_user_input)  # Call submit function when input changes
 
 # Initialize session state for responses if not already present
 if "responses" not in st.session_state:
     st.session_state.responses = []
 
-# Step 2: Generate a user story when the button is clicked
+# Generate user story when the button is clicked
 if st.button("Generar Historia de Usuario"):
-    st.session_state.widget = ""
+    content = st.session_state.user_input  # Get the user input from session state
     if content.strip() == "":
         st.error("Por favor, escribe el texto que necesitas.")
     else:
@@ -61,7 +61,7 @@ if st.button("Generar Historia de Usuario"):
         if messages:
             try:
                 message_content = messages[0].content[0].text
-                st.session_state.responses.append(message_content.value)
+                st.session_state.responses.append(message_content)  # Append response
             except IndexError:
                 st.error("No content found in the first message. Please verify the response structure.")
         else:
@@ -74,15 +74,20 @@ if st.session_state.responses:
         st.write(response)
 
 # Step 3: Allow user to suggest modifications
-suggestion = st.text_input('Sugerencia de modificación (escribe un cambio que deseas realizar en la respuesta anterior)')
+if "suggestion" not in st.session_state:
+    st.session_state.suggestion = ""  # Initialize suggestion input in session state
+
+# Suggestion input widget
+suggestion = st.text_input('Sugerencia de modificación (escribe un cambio que deseas realizar en la respuesta anterior)',
+                            key='suggestion')
 
 if st.button("Genera Nueva Historia de Usuario"):
+    last_response = st.session_state.responses[-1] if st.session_state.responses else ""
     if not suggestion.strip():
         st.error("Por favor, escribe una sugerencia para modificar la respuesta anterior.")
-    elif not st.session_state.responses:
+    elif not last_response:
         st.error("No hay respuestas anteriores para modificar.")
     else:
-        last_response = st.session_state.responses[-1]
         mod_thread = client.beta.threads.create(
             messages=[
                 {
@@ -107,8 +112,8 @@ if st.button("Genera Nueva Historia de Usuario"):
         # Display the modified response and append to session state
         if mod_messages:
             mod_message_content = mod_messages[0].content[0].text
-            st.session_state.responses.append(mod_message_content.value)
+            st.session_state.responses.append(mod_message_content)
             st.write("Respuesta Modificada:")
-            st.write(mod_message_content.value)
+            st.write(mod_message_content)
         else:
             st.error("No se pudo recuperar la respuesta modificada.")
