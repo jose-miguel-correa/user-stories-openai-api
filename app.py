@@ -23,9 +23,6 @@ if "suggestion_input" not in st.session_state:
 # Reset the session when the button is clicked
 if st.button("Limpiar Respuestas"):
     st.session_state.clear()
-    
-if st.button("Limpiar Inputs"):
-    st.session_state.user_input = ""
 
 st.title("Asistente de Historias de Usuario")
 
@@ -38,6 +35,7 @@ if "responses" not in st.session_state:
 
 # Step 2: Generate a user story when the button is clicked
 if st.button("Generar Historia de Usuario"):
+    st.session_state.widget = ""
     if content.strip() == "":
         st.error("Por favor, escribe el texto que necesitas.")
     else:
