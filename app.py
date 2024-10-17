@@ -14,7 +14,7 @@ st.image(logo_url, width=100)
 st.title("Asistente de Historias de Usuario")
 
 # Reset the session when the button is clicked
-if st.button("Limpiar Respuestas"):
+if st.button("Limpiar Entorno"):
     st.session_state.clear()
 
 # Step 1: User provides a content query
