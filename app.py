@@ -12,6 +12,14 @@ client = OpenAI(api_key=api_key)
 # Assistant ID
 assistant_id = st.secrets["ASSISTANT_ID"]
 
+# Initialize session state for responses and inputs if not already present
+if "responses" not in st.session_state:
+    st.session_state.responses = []
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""  # For the main content input
+if "suggestion_input" not in st.session_state:
+    st.session_state.suggestion_input = ""  # For the suggestion input
+
 # Reset the session when the button is clicked
 if st.button("Limpiar Respuestas"):
     st.session_state.clear()
