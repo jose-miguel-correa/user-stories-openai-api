@@ -15,6 +15,8 @@ assistant_id = st.secrets["ASSISTANT_ID"]
 # Reset the session when the button is clicked
 if st.button("Limpiar Respuestas"):
     st.session_state.clear()
+    
+if st.button("Limpiar Inputs"):
     st.session_state.user_input = ""
 
 st.title("Asistente de Historias de Usuario")
