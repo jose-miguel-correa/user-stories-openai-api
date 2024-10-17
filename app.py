@@ -8,8 +8,9 @@ client = OpenAI(api_key=api_key)
 assistant_id = st.secrets["ASSISTANT_ID"]
 
 # Display logo
-logo_url = 'logo3.jpg'
+logo_url = 'logo.gif'
 st.image(logo_url, width=100)
+
 st.title("Asistente de Historias de Usuario")
 
 # Reset the session when the button is clicked
@@ -23,12 +24,15 @@ if "user_input" not in st.session_state:
 # Create a text input for user query
 def submit_user_input():
     st.session_state.user_input = st.session_state.widget  # Store the input in session state
+    st.session_state.widget = ""  # Clear the input field
 
-# Text input widget for user input
+# First text input widget
 st.text_input('Escribe tu solicitud al asistente (Por ejemplo, "Crear perfil AWS EC2" o "Crear botón de login de usuario")',
               key='widget',  # Use a key to track the input
-              value=st.session_state.user_input,  # Retain the current value
               on_change=submit_user_input)  # Call submit function when input changes
+
+# Display the current user input
+st.info(f"Solicitud ingresada: {st.session_state.user_input}")
 
 # Initialize session state for responses if not already present
 if "responses" not in st.session_state:
@@ -78,14 +82,22 @@ if st.session_state.responses:
 if "suggestion" not in st.session_state:
     st.session_state.suggestion = ""  # Initialize suggestion input in session state
 
+# Function to handle suggestion submission
+def submit_suggestion():
+    st.session_state.suggestion = st.session_state.suggestion_widget  # Store the suggestion in session state
+    st.session_state.suggestion_widget = ""  # Clear the suggestion input field
+
 # Suggestion input widget
-suggestion = st.text_input('Sugerencia de modificación (escribe un cambio que deseas realizar en la respuesta anterior)',
-                            key='suggestion',  # Use a key to track the suggestion input
-                            value=st.session_state.suggestion)  # Retain the current value
+st.text_input('Sugerencia de modificación (escribe un cambio que deseas realizar en la respuesta anterior)',
+              key='suggestion_widget',  # Use a key to track the suggestion input
+              on_change=submit_suggestion)  # Call submit function when input changes
+
+# Display the current suggestion input
+st.info(f"Sugerencia ingresada: {st.session_state.suggestion}")
 
 if st.button("Genera Nueva Historia de Usuario"):
     last_response = st.session_state.responses[-1] if st.session_state.responses else ""
-    if not suggestion.strip():
+    if not st.session_state.suggestion.strip():
         st.error("Por favor, escribe una sugerencia para modificar la respuesta anterior.")
     elif not last_response:
         st.error("No hay respuestas anteriores para modificar.")
@@ -96,7 +108,7 @@ if st.button("Genera Nueva Historia de Usuario"):
                     "role": "user",
                     "content": f"""
                         Modifica la historia de usuario manteniendo todas las modificaciones previas: {last_response}.
-                        Agrega el siguiente cambio: {suggestion}. 
+                        Agrega el siguiente cambio: {st.session_state.suggestion}. 
                         No elimines ningún escenario previamente agregado, a menos que te lo indique explícitamente.
                     """,
                 }
