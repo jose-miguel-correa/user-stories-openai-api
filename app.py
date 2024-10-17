@@ -60,7 +60,7 @@ if st.button("Generar Historia de Usuario"):
         # Extract the response and append to session state
         if messages:
             try:
-                message_content = messages[0].content[0].text
+                message_content = messages[0].content[0].text.data
                 st.session_state.responses.append(message_content)  # Append response
             except IndexError:
                 st.error("No content found in the first message. Please verify the response structure.")
@@ -111,7 +111,7 @@ if st.button("Genera Nueva Historia de Usuario"):
 
         # Display the modified response and append to session state
         if mod_messages:
-            mod_message_content = mod_messages[0].content[0].text
+            mod_message_content = mod_messages[0].content[0].text.data
             st.session_state.responses.append(mod_message_content)
             st.write("Respuesta Modificada:")
             st.write(mod_message_content)
