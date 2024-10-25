@@ -217,4 +217,4 @@ if st.session_state.mod_message_content:
             print(f"Status Code: {subtask_response.status_code}")
             print(subtask_response.json())
     
-        st.info("Historia de Usuario creada em Jira")
+        st.info("Historia de Usuario creada en Jira")
