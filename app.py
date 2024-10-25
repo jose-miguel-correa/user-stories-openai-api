@@ -1,11 +1,33 @@
 import streamlit as st
 from openai import OpenAI
+from parse_text import textProcess
+import requests
+from requests.auth import HTTPBasicAuth
+import json
+
+# Jira API endpoint to create an issue (task)
+url = st.secrets['URL']
+#url = "https://siigroup-josecorrea.atlassian.net/rest/api/2/issue"
+email = st.secrets['EMAIL']
+jira_api = st.secrets['JIRA_API']
+# Authentication
+#auth = HTTPBasicAuth("jose.correa@siigroup.cl", "ATATT3xFfGF0keQkAPtE-S_bF6JiFh9E_S6p6DqM00ZjprNlGyiGsZPHJ5U0aa-luG1Fywsj0e4rPM8zW3lIvAh92ExT0KnACPgG0rXu7F7Kgaas036VxYnXKLPnXzURdp1HVjnbpVaoa03o9YO_tUk9aVopeFuwBK6hD0rayOcmvpx-GmlY11M=A1254279")  # Replace with your API token
+auth = HTTPBasicAuth(email, jira_api)
+
+# Headers
+headers = {
+    "Accept": "application/json",
+    "Content-Type": "application/json"
+}
 
 api_key = st.secrets["API_KEY"]
+#api_key = "sk-B61TXWnjCOjXr9ibIm_76-_IHMkTsbhjXNFFBEUVPGT3BlbkFJk8r_k98Nk2B77q38kpzs-gQkcc8fJFrUcvMM-pUjAA"
 client = OpenAI(api_key=api_key)
+
 
 # Assistant ID
 assistant_id = st.secrets["ASSISTANT_ID"]
+#assistant_id = "asst_X0m1o5VijT4CglzNxpe5jwfN"
 
 # Display logo
 logo_url = 'logo.gif'
@@ -95,6 +117,14 @@ st.text_input('Sugerencia de modificación (escribe un cambio que deseas realiza
 # Display the current suggestion input
 st.info(f"Sugerencia ingresada: {st.session_state.suggestion}")
 
+# Ensure that the session_state has a responses entry
+if 'responses' not in st.session_state:
+    st.session_state.responses = []
+
+# Ensure mod_message_content is in session state
+if 'mod_message_content' not in st.session_state:
+    st.session_state.mod_message_content = None
+
 if st.button("Genera Nueva Historia de Usuario"):
     last_response = st.session_state.responses[-1] if st.session_state.responses else ""
     if not st.session_state.suggestion.strip():
@@ -123,11 +153,68 @@ if st.button("Genera Nueva Historia de Usuario"):
         # Retrieve the modified response
         mod_messages = list(client.beta.threads.messages.list(thread_id=mod_thread.id, run_id=mod_run.id))
 
-        # Display the modified response and append to session state
+        # Display the modified response and store it in session state
         if mod_messages:
-            mod_message_content = mod_messages[0].content[0].text.value
-            st.session_state.responses.append(mod_message_content)
+            st.session_state.mod_message_content = mod_messages[0].content[0].text.value
+            st.session_state.responses.append(st.session_state.mod_message_content)
             st.write("Respuesta Modificada:")
-            st.write(mod_message_content)
+            st.write(st.session_state.mod_message_content)            
         else:
             st.error("No se pudo recuperar la respuesta modificada.")
+
+if st.session_state.mod_message_content:
+    if st.button("Enviar a Jira"):
+        texto = st.session_state.mod_message_content  # Directly assign the content
+        #print(st.session_state.mod_message_content)
+        get_text_splitted = textProcess()
+        caracteristica, contexto, scenarios = get_text_splitted.parse_input(texto)
+        # Main task payload (the "Característica" in Gherkin)
+        task_payload = json.dumps({
+            "fields": {
+                "project": {
+                    "key": "US2"  # Your project key
+                },
+                "summary": caracteristica,  # Main task (User Story)
+                "description": contexto,  # Gherkin's context
+                "issuetype": {
+                    "name": "Story"  # Issue type: Task for the user story
+                }
+            }
+        })
+
+        # Create the main task (user story)
+        task_response = requests.request(
+            "POST",
+            url,
+            headers=headers,
+            auth=auth,
+            data=task_payload
+        )
+
+        # Print the response for the main task
+        print(f"Status Code: {task_response.status_code}")
+        main_task_data = task_response.json()
+        print(main_task_data)
+
+        task_key = main_task_data["key"]  # Example: US2-123
+
+        subtask_payloads = get_text_splitted.generate_subtask_payloads(scenarios, task_key)
+
+        # Get the task key to create subtasks under it
+
+        # Jira API endpoint to create subtasks
+        subtask_url = "https://siigroup-josecorrea.atlassian.net/rest/api/2/issue"
+
+        # Loop through each subtask and create them in Jira
+        for subtask_payload in subtask_payloads:
+            subtask_response = requests.request(
+                "POST",
+                subtask_url,
+                headers=headers,
+                auth=auth,
+                data=json.dumps(subtask_payload)
+            )
+            print(f"Status Code: {subtask_response.status_code}")
+            print(subtask_response.json())
+    
+        st.write("Historia de Usuario creada em Jira")
